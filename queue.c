@@ -50,6 +50,9 @@ void q_free(queue_t *q)
  */
 bool q_insert_head(queue_t *q, char *s)
 {
+    if (!q) {
+        return false;
+    }
     list_ele_t *newh;
     /* TODO: What should you do if the q is NULL? */
     newh = malloc(sizeof(list_ele_t));
@@ -88,6 +91,9 @@ bool q_insert_tail(queue_t *q, char *s)
     /* TODO: You need to write the complete code for this function */
     /* Remember: It should operate in O(1) time */
     /* TODO: Remove the above comment when you are about to implement. */
+    if (!q) {
+        return false;
+    }
     list_ele_t *newt = malloc(sizeof(list_ele_t));
     if (!newt) {
         return false;
@@ -126,7 +132,7 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
     /* TODO: You need to fix up this code. */
     /* TODO: Remove the above comment when you are about to implement. */
-    if (!q->head) {
+    if (!q || !q->head || !sp) {
         return false;
     }
     list_ele_t *tmp = q->head;
@@ -151,7 +157,7 @@ int q_size(queue_t *q)
     /* TODO: You need to write the code for this function */
     /* Remember: It should operate in O(1) time */
     /* TODO: Remove the above comment when you are about to implement. */
-    return q->size;
+    return q ? q->size : 0;
 }
 
 /*
@@ -165,6 +171,49 @@ void q_reverse(queue_t *q)
 {
     /* TODO: You need to write the code for this function */
     /* TODO: Remove the above comment when you are about to implement. */
+    if (!q) {
+        return;
+    }
+    list_ele_t *l = NULL, *r = q->head;
+    q->tail = q->head;
+    while (r) {
+        list_ele_t *tmp = r->next;
+        r->next = l;
+        l = r;
+        r = tmp;
+    }
+    q->head = l;
+}
+
+static void swap_str(char **a, char **b)
+{
+    char *tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+static void list_qsort(list_ele_t *first, list_ele_t *last)
+{
+    if (!first || !last) {
+        return;
+    }
+    if (first == last || last->next == first) {
+        return;
+    }
+    // take last as pivot
+    list_ele_t *l = first, *r = first, *prev = 0;
+    while (r != last) {
+        if (strcmp(r->value, last->value) < 0) {
+            swap_str(&r->value, &l->value);
+            prev = l;
+            l = l->next;
+        }
+        r = r->next;
+    }
+    swap_str(&l->value, &last->value);
+
+    list_qsort(first, prev);
+    list_qsort(l->next, last);
 }
 
 /*
@@ -174,6 +223,11 @@ void q_reverse(queue_t *q)
  */
 void q_sort(queue_t *q)
 {
+    if (!q) {
+        return;
+    }
+
+    list_qsort(q->head, q->tail);
     /* TODO: You need to write the code for this function */
     /* TODO: Remove the above comment when you are about to implement. */
 }
