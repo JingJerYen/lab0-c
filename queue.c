@@ -12,7 +12,6 @@
 queue_t *q_new()
 {
     queue_t *q = malloc(sizeof(queue_t));
-    /* TODO: What if malloc returned NULL? */
     if (!q) {
         return NULL;
     }
@@ -25,14 +24,12 @@ queue_t *q_new()
 /* Free all storage used by queue */
 void q_free(queue_t *q)
 {
-    /* TODO: How about freeing the list elements and the strings? */
     if (!q) {
         return;
     }
-    list_ele_t *this = q->head;
-    while (this) {
-        list_ele_t *tmp = this;
-        this = this->next;
+    while (q->head) {
+        list_ele_t *tmp = q->head;
+        q->head = q->head->next;
         free(tmp->value);
         free(tmp);
         q->size--;
@@ -54,7 +51,6 @@ bool q_insert_head(queue_t *q, char *s)
         return false;
     }
     list_ele_t *newh;
-    /* TODO: What should you do if the q is NULL? */
     newh = malloc(sizeof(list_ele_t));
     if (!newh) {
         return false;
@@ -88,9 +84,6 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
-    /* TODO: You need to write the complete code for this function */
-    /* Remember: It should operate in O(1) time */
-    /* TODO: Remove the above comment when you are about to implement. */
     if (!q) {
         return false;
     }
@@ -130,8 +123,6 @@ bool q_insert_tail(queue_t *q, char *s)
  */
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
-    /* TODO: You need to fix up this code. */
-    /* TODO: Remove the above comment when you are about to implement. */
     if (!q || !q->head || !sp) {
         return false;
     }
@@ -154,9 +145,6 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
  */
 int q_size(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* Remember: It should operate in O(1) time */
-    /* TODO: Remove the above comment when you are about to implement. */
     return q ? q->size : 0;
 }
 
@@ -169,8 +157,6 @@ int q_size(queue_t *q)
  */
 void q_reverse(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* TODO: Remove the above comment when you are about to implement. */
     if (!q) {
         return;
     }
@@ -192,7 +178,12 @@ static void swap_str(char **a, char **b)
     *b = tmp;
 }
 
-static void list_qsort(list_ele_t *first, list_ele_t *last)
+
+// Inplace sort the link list, if carefully choose pivot,
+//     the average time complexity is O(nlogn),
+//     but worst case is
+//     O(n ^ 2)
+static void quick_sort(list_ele_t *first, list_ele_t *last)
 {
     if (!first || !last) {
         return;
@@ -212,8 +203,44 @@ static void list_qsort(list_ele_t *first, list_ele_t *last)
     }
     swap_str(&l->value, &last->value);
 
-    list_qsort(first, prev);
-    list_qsort(l->next, last);
+    quick_sort(first, prev);
+    quick_sort(l->next, last);
+}
+
+// Inplace on link-list, and can make sure time complexity
+// is strictly O(nlogn)
+static void merge_sort(list_ele_t **head)
+{
+    if (!head || !*head || !(*head)->next) {
+        return;
+    }
+
+    // find half
+    list_ele_t *left = *head, *right = (*head)->next;
+    while (right && right->next) {
+        left = left->next;
+        right = right->next->next;
+    }
+    right = left->next;  // reuse, save a pointer
+    left->next = NULL;
+
+    merge_sort(head);
+    merge_sort(&right);
+
+    // merge
+    left = *head;
+
+    while (left && right) {
+        if (strcmp(left->value, right->value) < 0) {
+            *head = left;
+            left = left->next;
+        } else {
+            *head = right;
+            right = right->next;
+        }
+        head = &(*head)->next;
+    }
+    *head = left ? left : right;
 }
 
 /*
@@ -227,7 +254,14 @@ void q_sort(queue_t *q)
         return;
     }
 
-    list_qsort(q->head, q->tail);
-    /* TODO: You need to write the code for this function */
-    /* TODO: Remove the above comment when you are about to implement. */
+    if (1)
+        merge_sort(&q->head);
+    else
+        quick_sort(q->head, q->tail);
+
+    while (q->tail && q->tail->next) {
+        q->tail = q->tail->next;
+    }
+
+    return;
 }
